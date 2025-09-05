@@ -6,6 +6,7 @@
 /results/models
 /data
 /figures/reference*
+/figures/
 /script/4.fixed_effects_plot.R
 /script/5.1.R
 

@@ -409,7 +409,7 @@
       position = position_dodge(width = 1)
     ) +
     geom_vline(xintercept = 0, size = 0.5, lty = 2) +
-    # scale_color_manual(values = gradient_colors) +
+    scale_color_manual(values = gradient_colors) +
     labs(x = lab_x, y = lab_y) +
     xlim(-0.75, 0.5) +
     theme_minimal() +

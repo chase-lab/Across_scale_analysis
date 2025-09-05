@@ -1,0 +1,4 @@
+# Ignore everything inside these folders
+data/*
+figures/*
+results/*

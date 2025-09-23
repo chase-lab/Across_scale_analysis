@@ -31,7 +31,7 @@
       data = model$study,
       aes(
         x = Land_use,
-        y = exp(Estimate), #size = 1/Est.Error^2,
+        y = exp(Estimate),
         color = Dataset_id,
         group = Dataset_id
       ),
@@ -68,21 +68,13 @@
       stroke = 2,
       size = 4
     ) +
-    scale_x_discrete(
-      labels = c(
-        "Natural vegetation",
-        "Forestry",
-        "Agriculture",
-        "Urban"
-      )
-    ) +
+    scale_x_discrete(labels = ~ sub("_", " ", .x, fixed = TRUE)) +
     scale_fill_manual(values = gradient_colors) +
     labs(
       x = '',
       y = case_match(metric, "N" ~ "Number of individuals", "S" ~ "q=0")
     ) +
     scale_y_continuous(trans = 'log2') +
-    # coord_cartesian(ylim = c(1, 128)) +
     scale_colour_manual(values = gradient_colors) +
     theme_minimal() +
     theme(
@@ -108,14 +100,9 @@
       data = model$Comparisons,
       aes(
         x = Ratio,
-        # y = Comparison,
         y = fct_reorder(Comparison, Ratio, .fun = mean),
         fill = factor(after_stat(x) > 0)
-        # ,
-        # fill = stat(quantile)
       ),
-      # quantiles = c(0.025, 0.25, 0.75, 0.975),
-      # calc_ecdf = T,
       scale = 0.9,
       alpha = 0.1,
       linetype = 0
@@ -158,7 +145,6 @@
       parse = T
     ) +
     theme(legend.position = "none") +
-    # + guides(fill=guide_legend(title=" "))+
     scale_fill_manual(
       values = c(
         "FALSE" = scales::alpha("#F2790F", 0.7),
@@ -304,7 +290,8 @@
 .plot_comparison_latitude <- function(
   studylevel,
   lab_x = "",
-  lab_y = ""
+  lab_y = "",
+  subtitle = NULL
 ) {
   gradient_colors <- grDevices::colorRampPalette(c(
     "#274659",
@@ -342,7 +329,7 @@
     ) +
     geom_hline(yintercept = 0, linewidth = 0.5, lty = 2) +
     scale_color_manual(values = gradient_colors) +
-    labs(x = lab_x, y = lab_y) +
+    labs(x = lab_x, y = lab_y, subtitle = subtitle) +
     ylim(-1.0, 0.5) +
     theme_minimal() +
     theme(
@@ -350,10 +337,10 @@
       panel.border = element_rect(color = "gray", fill = NA, linewidth = 0.5),
       panel.grid.minor.y = element_blank(),
       axis.title.x = element_blank(),
+      plot.subtitle = element_text(hjust = 0.5, size = 14),
       axis.text.x = element_text(size = 12),
       axis.text.y = element_text(size = 12),
       axis.title.y = element_text(size = 16)
-      # axis.title.x = element_text(size=14)
     )
 }
 
@@ -363,7 +350,8 @@
   studylevel,
   taxamean,
   lab_x = "",
-  lab_y = ""
+  lab_y = "",
+  subtitle = NULL
 ) {
   gradient_colors <- grDevices::colorRampPalette(c(
     "#274659",
@@ -408,15 +396,16 @@
       lwd = 2.5,
       position = position_dodge(width = 1)
     ) +
-    geom_vline(xintercept = 0, size = 0.5, lty = 2) +
+    geom_vline(xintercept = 0, linewidth = 0.5, lty = 2) +
     scale_color_manual(values = gradient_colors) +
-    labs(x = lab_x, y = lab_y) +
+    labs(x = lab_x, y = lab_y, subtitle = subtitle) +
     xlim(-0.75, 0.5) +
     theme_minimal() +
     theme(
       legend.position = 'none',
       panel.border = element_rect(color = "gray", fill = NA, linewidth = 0.5),
       panel.grid.minor.y = element_blank(),
+      plot.subtitle = element_text(hjust = 0.5, size = 14),
       axis.text.x = element_text(size = 12),
       axis.text.y = element_text(size = 12),
       axis.title.y = element_text(size = 16),

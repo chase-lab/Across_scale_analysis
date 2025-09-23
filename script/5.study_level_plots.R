@@ -3,6 +3,8 @@ library(brms)
 library(tidybayes)
 library(ggridges)
 
+Metadata <- read.csv(file = "data/Metadata.csv")
+
 # random effect ####
 ## alpha S#####
 alpha_S_model <- alpha_S_model2
@@ -2372,7 +2374,7 @@ Fig2 <- cowplot::plot_grid(
   theme(plot.margin = margin(t = 0, r = 0, b = 15, l = 19, unit = "pt"))
 
 cowplot::save_plot(
-  "Fig2.png",
+  "reference_Fig2.png",
   Fig2,
   base_height = 11,
   base_width = 8.8,
@@ -2381,7 +2383,7 @@ cowplot::save_plot(
 )
 
 cowplot::save_plot(
-  "Fig2.pdf",
+  "reference_Fig2.pdf",
   Fig2,
   base_height = 11,
   base_width = 8.8,
@@ -2414,7 +2416,7 @@ Fig3 <- cowplot::plot_grid(
   theme(plot.margin = margin(t = 0, r = 0, b = 15, l = 0, unit = "pt"))
 
 cowplot::save_plot(
-  "Fig3.png",
+  "reference_Fig3.png",
   Fig3,
   base_height = 7,
   base_width = 8.8,
@@ -2423,7 +2425,7 @@ cowplot::save_plot(
 )
 
 cowplot::save_plot(
-  "Fig3.pdf",
+  "reference_Fig3.pdf",
   Fig3,
   base_height = 7,
   base_width = 8.8,

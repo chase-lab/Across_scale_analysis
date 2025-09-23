@@ -62,30 +62,13 @@
   )
 
   if (isTRUE(study_level)) {
-    # spread_draws <- model |>
-    #   tidybayes::spread_draws(
-    #     b_Land_useNatural_vegetation,
-    #     b_Land_useAgriculture,
-    #     b_Land_useUrban,
-    #     b_Land_useForestry,
-    #     r_Dataset_id[Dataset_id, Land_use],
-    #     ndraws = 1000,
-    #     seed = 111
-    #   ) |>
-    #   ungroup() |>
-    #   mutate(across(
-    #     .cols = starts_with("b_Land_use"),
-    #     .fns = function(x) x + r_Dataset_id
-    #   ))
     Natural_vegetation <- model |>
       tidybayes::spread_draws(
         b_Land_useNatural_vegetation,
         r_Dataset_id[Dataset_id, Land_use],
         ndraws = 1000,
         seed = 111
-      )
-
-    Natural_vegetation <- Natural_vegetation |>
+      ) |>
       mutate(
         Natural_vegetation = b_Land_useNatural_vegetation + r_Dataset_id
       ) |>
@@ -97,8 +80,7 @@
         r_Dataset_id[Dataset_id, Land_use],
         ndraws = 1000,
         seed = 111
-      )
-    Agriculture <- Agriculture |>
+      ) |>
       mutate(Agriculture = b_Land_useAgriculture + r_Dataset_id) |>
       filter(Land_use == "Land_useAgriculture")
 
@@ -108,8 +90,7 @@
         r_Dataset_id[Dataset_id, Land_use],
         ndraws = 1000,
         seed = 111
-      )
-    Urban <- Urban |>
+      ) |>
       mutate(Urban = b_Land_useUrban + r_Dataset_id) |>
       filter(Land_use == "Land_useUrban")
 
@@ -119,17 +100,16 @@
         r_Dataset_id[Dataset_id, Land_use],
         ndraws = 1000,
         seed = 111
-      )
-    Forestry <- Forestry |>
+      ) |>
       mutate(Forestry = b_Land_useForestry + r_Dataset_id) |>
       filter(Land_use == "Land_useForestry")
 
-    Natural_vegetation$AN <- (Agriculture$b_Land_useAgriculture) -
-      (Natural_vegetation$b_Land_useNatural_vegetation)
-    Natural_vegetation$UN <- (Urban$b_Land_useUrban) -
-      (Natural_vegetation$b_Land_useNatural_vegetation)
-    Natural_vegetation$FN <- (Forestry$b_Land_useForestry) -
-      (Natural_vegetation$b_Land_useNatural_vegetation)
+    Natural_vegetation$AN <- (Agriculture$Agriculture) -
+      (Natural_vegetation$Natural_vegetation)
+    Natural_vegetation$UN <- (Urban$Urban) -
+      (Natural_vegetation$Natural_vegetation)
+    Natural_vegetation$FN <- (Forestry$Forestry) -
+      (Natural_vegetation$Natural_vegetation)
 
     Comparisons <- Natural_vegetation |>
       pivot_longer(
@@ -137,17 +117,15 @@
         names_to = "Comparison",
         values_to = "Ratio"
       ) |>
-      ungroup()
-
-    Comparisons$Comparison <- factor(
-      Comparisons$Comparison,
-      levels = c("AN", "UN", "FN"),
-      labels = c(
-        'Agriculture/Natural vegetation',
-        'Urban/Natural vegetation',
-        'Forestry/Natural vegetation'
+      ungroup() |>
+      mutate(
+        Comparison = forcats::fct_recode(
+          .f = Comparison,
+          "Agriculture/Natural vegetation" = "AN",
+          "Urban/Natural vegetation" = "UN",
+          "Forestry/Natural vegetation" = "FN"
+        )
       )
-    )
   } else {
     spread_draws <- model |>
       tidybayes::spread_draws(
@@ -172,98 +150,14 @@
         values_to = "Ratio"
       ) |>
       mutate(
-        Comparison = factor(
-          Comparison,
-          levels = c("AN", "UN", "FN"),
-          labels = c(
-            "Agriculture/Natural vegetation",
-            "Urban/Natural vegetation",
-            "Forestry/Natural vegetation"
-          )
+        Comparison = forcats::fct_recode(
+          .f = Comparison,
+          "Agriculture/Natural vegetation" = "AN",
+          "Urban/Natural vegetation" = "UN",
+          "Forestry/Natural vegetation" = "FN"
         )
       )
   }
-
-  return(list(Comparisons = Comparisons, metric = metric))
-}
-
-.wrangle_comparisons_backup <- function(scale, metric, study_level = FALSE) {
-  stopifnot(
-    "scale must be alpha, beta or gamma" = is.element(
-      scale,
-      c("alpha", "beta", "gamma")
-    )
-  )
-  stopifnot(
-    "metric must be N, S or Spie" = is.element(metric, c("N", "S", "Spie"))
-  )
-  model <- readRDS(
-    file = paste0("results/models/", scale, "_", metric, "_model.rds")
-  )
-
-  # residuals <- stats::residuals(
-  #   model,
-  #   type = "pearson",
-  #   method = "predict"
-  # ) |>
-  #   as_tibble() |>
-  #   bind_cols(model$data)
-  #
-  # residuals$fitted <- stats::fitted(model, re_formula = NA)[, "Estimate"]
-  # residuals$predict <- stats::predict(model)[, "Estimate"]
-
-  if (isTRUE(study_level)) {
-    spread_draws <- model |>
-      tidybayes::spread_draws(
-        b_Land_useNatural_vegetation,
-        b_Land_useAgriculture,
-        b_Land_useUrban,
-        b_Land_useForestry,
-        r_Dataset_id[Dataset_id, Land_use],
-        ndraws = 1000,
-        seed = 111
-      ) |>
-      ungroup() |>
-      mutate(across(
-        .cols = starts_with("b_Land_use"),
-        .fns = function(x) x + r_Dataset_id
-      ))
-  } else {
-    spread_draws <- model |>
-      tidybayes::spread_draws(
-        b_Land_useNatural_vegetation,
-        b_Land_useAgriculture,
-        b_Land_useUrban,
-        b_Land_useForestry,
-        ndraws = 1000,
-        seed = 111
-      )
-  }
-
-  Comparisons <- spread_draws |>
-    mutate(
-      AN = b_Land_useAgriculture - b_Land_useNatural_vegetation,
-      UN = b_Land_useUrban - b_Land_useNatural_vegetation,
-      FN = b_Land_useForestry - b_Land_useNatural_vegetation
-    ) |>
-    select(any_of("Dataset_id"), AN, UN, FN) |>
-    pivot_longer(
-      cols = all_of(c("AN", "UN", "FN")),
-      names_to = "Comparison",
-      values_to = "Ratio"
-    ) |>
-    mutate(
-      Comparison = factor(
-        Comparison,
-        levels = c("AN", "UN", "FN"),
-        labels = c(
-          "Agriculture/Natural vegetation",
-          "Urban/Natural vegetation",
-          "Forestry/Natural vegetation"
-        )
-      )
-    )
-
   return(list(Comparisons = Comparisons, metric = metric))
 }
 
@@ -280,23 +174,16 @@
 #'   It must have at least the columns `Comparison` and `Ratio`.
 #' @param scale A character string that identifies the metric (e.g. `"alpha"`,
 #'   `"beta"` or `"gamma"`).  The scale is appended to the new column names
-#'   (`Ratio<scale>0` and `Ratio<scale>2`) so they stay distinct after the
+#'   (`Ratio0` and `Ratio2`) so they stay distinct after the
 #'   bind‑cols operation.
 #'
 #' @return A tibble with three columns:
-#'   \describe{
-#'     \item{Comparison}{Factor with ordered levels
+#'   Comparison: Factor with ordered levels
 #'       `"Forestry/Natural vegetation"`,
 #'       `"Agriculture/Natural vegetation"`,
-#'       `"Urban/Natural vegetation"` and the corresponding short
-#'       labels `"Forestry"`, `"Agriculture"`, `"Urban"` .}
-#'     \item{ratio_type}{Character indicating which ratio the row refers to
-#'       (`"Ratio<suffix>0"` or `"Ratio<suffix>2"`).}
-#'     \item{Ratio}{Numeric effect‑size value.}
-#'   }
-#'   The result is suitable for direct use with `ggplot2` (e.g. via
-#'   `geom_density_ridges_gradient`).
-#'   No side‑effects are produced.
+#'       `"Urban/Natural vegetation"`
+#'   ratio_type: Character indicating which ratio the row refers to Ratio0 or Ratio2.
+#'   Ratio: Numeric effect‑size value.
 #' @examples
 #'   df_long <- prep_comparisons(ComparisonsA0, ComparisonsA2, "alpha")
 
@@ -313,14 +200,11 @@
         ),
         vectorize_all = FALSE
       ),
-      Comparison = factor(
-        Comparison,
-        levels = c(
-          "Forestry/Natural vegetation",
-          "Agriculture/Natural vegetation",
-          "Urban/Natural vegetation"
-        ),
-        labels = c("Forestry", "Agriculture", "Urban")
+      Comparison = forcats::fct_recode(
+        .f = Comparison,
+        Agriculture = "Agriculture/Natural vegetation",
+        Urban = "Urban/Natural vegetation",
+        Forestry = "Forestry/Natural vegetation"
       )
     )
 }

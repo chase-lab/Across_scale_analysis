@@ -1,100 +1,99 @@
-ComparisonsB0 <- ComparisonsB0 |>
-  rename(RatioB0 = Ratio) |>
-  select(5:6, )
+library(tidyverse)
 
-ComparisonsG0 <- ComparisonsG0 |>
-  rename(RatioG0 = Ratio) |>
-  select(5:6, )
+# Gamma-Beta S ----
+ComparisonsG0 <- read.table(
+  file = "results/temp/ComparisonsG0.txt",
+  quote = "\"",
+  comment.char = ""
+) |>
+  as_tibble() |>
+  select(Comparison, RatioG0) |>
+  mutate(Comparison = as.factor(Comparison))
 
-alpha0 <- cbind(ComparisonsB0, ComparisonsG0)
+ComparisonsB0 <- read.table(
+  file = "results/temp/ComparisonsB0.txt",
+  quote = "\"",
+  comment.char = ""
+) |>
+  as_tibble() |>
+  select(Comparison, RatioB0) |>
+  mutate(Comparison = as.factor(Comparison))
 
-alpha0 <- alpha0 |> select(-3, )
-
-alpha0 <- alpha0 |>
+alpha0 <- bind_cols(ComparisonsB0, ComparisonsG0) |>
+  select(-Comparison...3) |>
   mutate(RatioA0 = RatioG0 - RatioB0)
 
-ComparisonsB2 <- ComparisonsB2 |>
-  rename(RatioB2 = Ratio) |>
-  select(5:6, )
+# Gamma-Beta Spie ----
+ComparisonsG2 <- read.table(
+  file = "results/temp/ComparisonsG2.txt",
+  quote = "\"",
+  comment.char = ""
+) |>
+  as_tibble() |>
+  select(Comparison, RatioG2) |>
+  mutate(Comparison = as.factor(Comparison))
 
-ComparisonsG2 <- ComparisonsG2 |>
-  rename(RatioG2 = Ratio) |>
-  select(5:6, )
+ComparisonsB2 <- read.table(
+  file = "results/temp/ComparisonsB2.txt",
+  quote = "\"",
+  comment.char = ""
+) |>
+  as_tibble() |>
+  select(Comparison, RatioB2) |>
+  mutate(Comparison = as.factor(Comparison))
 
-alpha2 <- cbind(ComparisonsB2, ComparisonsG2)
-
-alpha2 <- alpha2 |> select(-3, )
-
-alpha2 <- alpha2 |>
+alpha2 <- bind_cols(ComparisonsB2, ComparisonsG2) |>
+  select(-Comparison...3) |>
   mutate(RatioA2 = RatioG2 - RatioB2)
 
-alpha <- cbind(alpha0, alpha2)
-
-alpha <- alpha |>
-  select(c(1, 4, 8))
-
-alpha <- alpha |>
+alpha <- bind_cols(alpha0, alpha2) |>
+  select(Comparison = Comparison...1, RatioG0, RatioA2) |>
   pivot_longer(
     cols = starts_with("Ratio"),
     names_to = "ratio_type",
+    names_transform = as.factor,
     values_to = "Ratio"
-  )
-
-alpha$Comparison <- factor(
-  alpha$Comparison,
-  levels = c(
-    "Forestry/Natural vegetation",
-    "Agriculture/Natural vegetation",
-    "Urban/Agriculture",
-    "Urban/Natural vegetation"
-  )
-)
-
-alpha <- alpha |>
-  group_by(Comparison, ratio_type) |>
-  summarise(
-    lower_90 = quantile(Ratio, probs = 0.05),
-    upper_90 = quantile(Ratio, probs = 0.95)
   ) |>
-  left_join(alpha, by = c("Comparison", "ratio_type"))
+  group_by(Comparison, ratio_type) |>
+  mutate(
+    lower_90 = quantile(Ratio, probs = 0.05),
+    upper_90 = quantile(Ratio, probs = 0.95),
+    Comparison = fct_recode(
+      .f = Comparison,
+      "Forestry/Natural vegetation" = "FN",
+      "Agriculture/Natural vegetation" = "AN",
+      "Urban/Natural vegetation" = "UN"
+    )
+  )
 
-write_csv(alpha, "alpha_calculated_with_beta_gamma.csv")
+write_csv(x = alpha, file = "alpha_calculated_with_beta_gamma.csv")
 
 ## plot alpha q=0 and q=2 together ####
 
-Comparisons02 <- alpha_calculated_with_beta_gamma
-
-Comparisons02 |>
-  group_by(Comparison) |>
-  summarise(n = n())
-
-Comparisons02$Comparison <- factor(
-  Comparisons02$Comparison,
-  levels = c(
-    "Forestry/Natural vegetation",
-    "Agriculture/Natural vegetation",
-    "Urban/Natural vegetation"
-  ),
-  labels = c('Forestry', 'Agriculture', 'Urban')
-)
+alpha <- alpha |>
+  mutate(
+    Comparison = fct_recode(
+      .f = Comparison,
+      Forestry = "Forestry/Natural vegetation",
+      Agriculture = "Agriculture/Natural vegetation",
+      Urban = "Urban/Natural vegetation"
+    )
+  )
 
 alpha_02_posterior <- ggplot() +
-  geom_density_ridges_gradient(
-    data = Comparisons02,
+  ggridges::geom_density_ridges_gradient(
+    data = alpha,
     aes(
       x = Ratio,
-      # y = Comparison,
       y = Comparison,
       fill = ratio_type
-      # y = fct_reorder(Comparison, Ratio, .fun = mean),
-      # fill = factor(after_stat(x) > 0)
     ),
     scale = 0.9,
     alpha = 0.1,
     linetype = 0
   ) +
   geom_point(
-    data = Comparisons02,
+    data = alpha,
     aes(x = Ratio, y = Comparison, color = ratio_type),
     stat = ggstance:::StatSummaryh,
     fun.x = median,
@@ -105,7 +104,7 @@ alpha_02_posterior <- ggplot() +
   ) +
   xlim(-1.0, 0.5) +
   geom_text(
-    data = Comparisons02 |>
+    data = alpha |>
       filter(Ratio < 0) |>
       group_by(Comparison, ratio_type) |>
       summarise(Count = n()) |>
@@ -115,8 +114,7 @@ alpha_02_posterior <- ggplot() +
       distinct(Comparison, ratio_type, percentages, .keep_all = T),
     aes(
       x = -0.85,
-      # y = Comparison,
-      y = as.numeric(Comparison) + ifelse(ratio_type == "RatioA0", 0.45, 0.15),
+      y = as.numeric(Comparison) + if_else(ratio_type == "RatioA0", 0.45, 0.15),
       color = ratio_type,
       label = percentages
     ),
@@ -124,17 +122,14 @@ alpha_02_posterior <- ggplot() +
     parse = T,
     show.legend = FALSE
   ) +
-  geom_vline(xintercept = 0, size = 0.5, linetype = 2) +
+  geom_vline(xintercept = 0, linewidth = 0.5, linetype = 2) +
   labs(y = '', x = '') +
-  # guides(fill=guide_legend(title=" "))+
   scale_fill_manual(
     values = c(
       "RatioA0" = scales::alpha("#F2790F", 0.7),
       "RatioA2" = scales::alpha("#CAAE10", 0.7)
     ),
     name = " ",
-    # labels = c("RatioA0" = " ",
-    #            "RatioA2" = " ")
     labels = c("RatioA0" = "S", "RatioA2" = "Spie")
   ) +
   scale_color_manual(
@@ -143,8 +138,6 @@ alpha_02_posterior <- ggplot() +
       "RatioA2" = scales::alpha("#CAAE10", 0.9)
     ),
     name = " ",
-    # labels = c("RatioA0" = " ",
-    #            "RatioA2" = " ")
     labels = c("RatioA0" = "S", "RatioA2" = "Spie")
   ) +
   scale_y_discrete(labels = scales::wrap_format(9)) +
@@ -155,7 +148,6 @@ alpha_02_posterior <- ggplot() +
     legend.direction = "horizontal",
     legend.key.spacing.x = unit(1, "cm")
   ) +
-  # theme(legend.position = "none")+
   theme(
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),

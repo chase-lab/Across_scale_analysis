@@ -71,14 +71,14 @@
     scale_x_discrete(labels = ~ sub("_", " ", .x, fixed = TRUE)) +
     scale_fill_manual(values = gradient_colors) +
     labs(
-      x = '',
+      x = "",
       y = case_match(metric, "N" ~ "Number of individuals", "S" ~ "q=0")
     ) +
-    scale_y_continuous(trans = 'log2') +
+    scale_y_continuous(trans = "log2") +
     scale_colour_manual(values = gradient_colors) +
     theme_minimal() +
     theme(
-      legend.position = 'none',
+      legend.position = "none",
       panel.border = element_rect(color = "gray", fill = NA, linewidth = 0.5),
       panel.grid.minor.y = element_blank(),
       axis.text.x = element_text(size = 12),
@@ -129,7 +129,7 @@
     ) +
     labs(
       y = case_match(metric, "N" ~ "Number of individuals", "S" ~ "q=0"),
-      x = 'Log Ratio'
+      x = "Log Ratio"
     ) +
     geom_text(
       data = model$Comparisons |>
@@ -154,7 +154,7 @@
     scale_y_discrete(labels = scales::wrap_format(9)) +
     theme_minimal() +
     theme(
-      legend.position = 'none',
+      legend.position = "none",
       panel.grid.major.x = element_blank(),
       panel.grid.minor.x = element_blank(),
       panel.border = element_rect(color = "gray", fill = NA, linewidth = 0.5),
@@ -295,45 +295,71 @@
 ) {
   gradient_colors <- grDevices::colorRampPalette(c(
     "#274659",
-    "#CAAE10",
-    "#F2790F",
+    "#ff9852",
     "#B93102"
-  ))(length(unique(studylevel$Dataset_id)))
+  ))(length(unique(studylevel$Comparison)))
 
   ggplot() +
     geom_point(
       data = studylevel,
-      aes(x = Latitude, y = mean, group = Dataset_id, colour = Dataset_id),
-      size = 1,
+      aes(x = Latitude, y = mean, colour = Comparison),
+      size = 1.2,
       position = position_dodge(width = 0.5),
-      alpha = 0.3
+      alpha = 0.3,
+      show.legend = FALSE
     ) +
-    geom_linerange(
-      data = studylevel,
+    # geom_linerange(
+    #   data = studylevel,
+    #   aes(
+    #     x = Latitude,
+    #     y = mean,
+    #     ymin = lower_ci,
+    #     ymax = upper_ci,
+    #     group = Comparison,
+    #     colour = Comparison
+    #   ),
+    #   position = position_dodge(width = 0.7),
+    #   alpha = 0.5,
+    #   show.legend = FALSE
+    # ) +
+    geom_ribbon(
+      data = lat_mean_lu,
       aes(
-        x = Latitude,
-        y = mean,
-        ymin = lower_ci,
-        ymax = upper_ci,
-        group = Dataset_id,
-        colour = Dataset_id
+        x = Latitude, ymin = lower__,
+        ymax = upper__, fill = Comparison
       ),
-      position = position_dodge(width = 0.7),
-      alpha = 0.5
+      alpha = 0.1,
+      show.legend = FALSE
     ) +
-    geom_smooth(
-      data = studylevel,
-      aes(x = Latitude, y = mean),
-      color = "#B93102",
-      method = "glm"
+    geom_line(
+      data = lat_mean_lu,
+      aes(
+        x = Latitude, y = estimate__,
+        colour = Comparison
+      ),
+      linetype = 2,
+      linewidth = 0.9
     ) +
-    geom_hline(yintercept = 0, linewidth = 0.5, lty = 2) +
+    geom_ribbon(
+      data = lat_mean,
+      aes(x = Latitude, ymin = lower__, ymax = upper__),
+      alpha = 0.7,
+      fill = "gray",
+    ) +
+    geom_line(
+      data = lat_mean,
+      aes(x = Latitude, y = estimate__),
+      color = "black",
+      linewidth = 2
+    ) +
+    geom_hline(yintercept = 0, linewidth = 0.5, lty = 1) +
     scale_color_manual(values = gradient_colors) +
+    scale_fill_manual(values = gradient_colors) +
     labs(x = lab_x, y = lab_y, subtitle = subtitle) +
     ylim(-1.0, 0.5) +
     theme_minimal() +
     theme(
-      legend.position = 'none',
+      legend.position = "none",
       panel.border = element_rect(color = "gray", fill = NA, linewidth = 0.5),
       panel.grid.minor.y = element_blank(),
       axis.title.x = element_blank(),
@@ -355,54 +381,79 @@
 ) {
   gradient_colors <- grDevices::colorRampPalette(c(
     "#274659",
-    "#CAAE10",
-    "#F2790F",
+    "#ff9852",
     "#B93102"
-  ))(length(unique(studylevel$Dataset_id)))
+    # ,
+    # "#B93102"
+  ))(length(unique(studylevel$Comparison)))
 
   ggplot() +
     geom_point(
       data = studylevel,
-      aes(x = mean, y = Taxa, group = Dataset_id, colour = Dataset_id),
-      size = 1,
-      position = position_dodge(width = 0.7),
+      aes(x = mean, y = Taxa, colour = Comparison),
+      size = 0.9,
+      # position = position_dodge(width = 0.7),
+      position = position_jitter(height = 0.15, width = 0, seed = 19),
       alpha = 0.3
     ) +
-    geom_linerange(
-      data = studylevel,
+    # geom_linerange(
+    #   data = studylevel,
+    #   aes(
+    #     x = mean,
+    #     xmin = lower_ci,
+    #     xmax = upper_ci,
+    #     y = Taxa,
+    #     # group = Comparison,
+    #     colour = Comparison
+    #   ),
+    #   position = position_jitter(height = 0.15, width = 0, seed = 19),
+    #   alpha = 0.3
+    # ) +
+    geom_point(
+      data = taxa_mean_lu,
       aes(
-        x = mean,
-        xmin = lower_ci,
-        xmax = upper_ci,
-        y = Taxa,
-        group = Dataset_id,
-        colour = Dataset_id
+        x = estimate__, y = Taxa,
+        color = Comparison
       ),
-      position = position_dodge(width = 0.7),
-      alpha = 0.5
+      shape = 5,
+      fill = "white",
+      stroke = 1.0,
+      size = 1.5,
+      position = position_dodge(width = 0.5)
+    ) +
+    geom_linerange(
+      data = taxa_mean_lu,
+      aes(
+        x = estimate__, xmin = lower__, xmax = upper__,
+        y = Taxa, colour = Comparison
+      ),
+      lwd = 0.8,
+      position = position_dodge(width = 0.5)
     ) +
     geom_point(
       data = taxa_mean,
-      aes(x = taxa_mean, y = Taxa),
+      aes(x = estimate__, y = Taxa),
       shape = 21,
       color = "black",
       fill = "white",
-      stroke = 2,
-      size = 4
+      stroke = 1.9,
+      size = 3.2,
+      position = position_nudge(y = 0.1)
     ) +
     geom_linerange(
       data = taxa_mean,
-      aes(x = taxa_mean, xmin = lower_ci, xmax = upper_ci, y = Taxa),
-      lwd = 2.5,
-      position = position_dodge(width = 1)
+      aes(x = estimate__, xmin = lower__, xmax = upper__, y = Taxa),
+      lwd = 1.9,
+      position = position_nudge(y = 0.1)
+      # position = position_dodge(width = 1)
     ) +
     geom_vline(xintercept = 0, linewidth = 0.5, lty = 2) +
     scale_color_manual(values = gradient_colors) +
     labs(x = lab_x, y = lab_y, subtitle = subtitle) +
-    xlim(-0.75, 0.5) +
+    coord_cartesian(xlim = c(-0.75, 0.5)) +
     theme_minimal() +
     theme(
-      legend.position = 'none',
+      legend.position = "none",
       panel.border = element_rect(color = "gray", fill = NA, linewidth = 0.5),
       panel.grid.minor.y = element_blank(),
       plot.subtitle = element_text(hjust = 0.5, size = 14),

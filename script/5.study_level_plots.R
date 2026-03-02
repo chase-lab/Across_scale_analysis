@@ -9,21 +9,21 @@ Metadata <- read.csv(file = "data/Metadata.csv")
 ## alpha S#####
 alpha_S_model <- alpha_S_model2
 rm(alpha_S_model2)
-resid <- residuals(alpha_S_model, type = 'pearson', method = 'predict') |>
+resid <- residuals(alpha_S_model, type = "pearson", method = "predict") |>
   dplyr::as_tibble() |>
   bind_cols(alpha_S_model$data)
 
 fitted <- fitted(alpha_S_model, re_formula = NA)
 predict <- predict(alpha_S_model)
 
-resid$fitted <- fitted[, 'Estimate']
-resid$predict <- predict[, 'Estimate']
+resid$fitted <- fitted[, "Estimate"]
+resid$predict <- predict[, "Estimate"]
 
-plot(resid$Estimate ~ resid$fitted, ylab = 'Pearson residual')
+plot(resid$Estimate ~ resid$fitted, ylab = "Pearson residual")
 
 plot(
   resid$Estimate ~ resid$Land_use,
-  ylab = 'Pearson residual',
+  ylab = "Pearson residual",
   xlab = "Land_use"
 )
 
@@ -91,68 +91,13 @@ Comparisons <- Natural_vegetation |>
 Comparisons$Comparison <- factor(
   Comparisons$Comparison,
   levels = c("AN", "UN", "FN"),
-  labels = c('Agriculture', 'Urban', 'Forestry')
+  labels = c("Agriculture", "Urban", "Forestry")
 )
 
 
-Comparisons <- left_join(Comparisons, Metadata, by = 'Dataset_id')
+Comparisons <- left_join(Comparisons, Metadata, by = "Dataset_id")
 
-###  fit model to latitudinal patterns####
-install.packages(
-  "cmdstanr",
-  repos = c('https://stan-dev.r-universe.dev', getOption("repos")),
-  lib = "~/share/groups/synthesis/Minghua"
-)
-library(cmdstanr)
 
-# lat_alpha_S_model <- lm(
-#   formula = Ratio ~ Latitude,
-#   data = Comparisons
-# )
-
-lat_alpha_S_model <- brm(
-  Ratio ~ Latitude + (1 | Dataset_id),
-  data = Latitude_alpha_S_comparisons,
-  family = "gaussian",
-  iter = 2000,
-  warmup = 1000,
-  cores = 4,
-  chains = 4
-)
-
-save(lat_alpha_S_model, file = "lat_alpha_S_model.R")
-
-pp_check(lat_alpha_S_model) +
-  scale_x_continuous(trans = 'log')
-# mu <- Comparisons |>
-#   group_by(Comparison) |>
-#   summarise(mu=mean(Ratio))
-#
-# taxamu <- Comparisons |>
-#   group_by(Taxa) |>
-#   summarise(mu=mean(Ratio))
-#
-# continent <- alpha_metrics |>
-#   select(c('Dataset_id','Continent'))
-#
-# continent <- continent[!duplicated(continent$Dataset_id),]
-#
-# Comparisons <- left_join(Comparisons,continent,by='Dataset_id')
-#
-# contmu <- Comparisons |>
-#   group_by(Continent) |>
-#   summarise(mu=mean(Ratio))
-
-# Comparisons$Continent<- factor(Comparisons$Continent,
-#                                 levels = c("Europe","Central_America",
-#                                            "Africa","North_America",
-#                                            "South_America","Oceania",
-#                                            "Asia"),
-#                                 labels = c("Europe","Central America",
-#                                            "Africa","North America",
-#                                            "South America","Oceania",
-#                                            "Asia"
-#                                 ))
 ### alpha S plot comparison at study level####
 studylevel <- Comparisons |>
   group_by(Dataset_id, Comparison) |>
@@ -162,8 +107,8 @@ studylevel <- Comparisons |>
     upper_ci = mean + qt(0.975, df = n() - 1) * (sd(Ratio) / sqrt(n()))
   )
 
-studylevel <- left_join(studylevel, Metadata, by = 'Dataset_id')
-#calculate the absolute value of Latitude
+studylevel <- left_join(studylevel, Metadata, by = "Dataset_id")
+# calculate the absolute value of Latitude
 studylevel$Latitude <- abs(as.numeric(studylevel$Latitude))
 studylevel$Dataset_id <- as.character(studylevel$Dataset_id)
 
@@ -204,11 +149,11 @@ alpha_altitude_S <- ggplot() +
   ) +
   geom_hline(yintercept = 0, linewidth = 0.5, lty = 2) +
   scale_color_manual(values = gradient_colors) +
-  labs(x = '', y = 'α', subtitle = "S") +
+  labs(x = "", y = "α", subtitle = "S") +
   ylim(-1.0, 0.5) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
     panel.grid.minor.y = element_blank(),
     plot.subtitle = element_text(hjust = 0.5, size = 14),
@@ -291,11 +236,11 @@ alpha_taxa_S <- ggplot() +
   ) +
   geom_vline(xintercept = 0, linewidth = 0.5, lty = 2) +
   scale_color_manual(values = gradient_colors) +
-  labs(y = 'α', x = '', subtitle = "S") +
+  labs(y = "α", x = "", subtitle = "S") +
   xlim(-0.75, 0.5) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
     panel.grid.minor.y = element_blank(),
     plot.subtitle = element_text(hjust = 0.5, size = 14),
@@ -336,10 +281,10 @@ ggplot() +
     # legend.position="none",
     axis.text.y = element_blank()
   ) +
-  labs(y = 'Study', x = 'Log Ratio')
+  labs(y = "Study", x = "Log Ratio")
 
 
-#plot comparison#
+# plot comparison#
 alpha_S_continent <- ggplot() +
   geom_density_ridges_gradient(
     data = Comparisons,
@@ -373,12 +318,12 @@ alpha_S_continent <- ggplot() +
     stroke = 2,
     size = 4
   ) +
-  labs(y = '', x = '') +
+  labs(y = "", x = "") +
   geom_text(
     data = Comparisons |>
       group_by(Continent) |>
       summarise(Total = n(), Count = sum(Ratio < 0), d = (Count / Total)) |>
-      mutate(percentages = sprintf('%.2f', d)) |>
+      mutate(percentages = sprintf("%.2f", d)) |>
       ungroup() |>
       distinct(Continent, percentages, .keep_all = T),
     aes(x = -0.85, y = Continent, label = paste(percentages)),
@@ -396,7 +341,7 @@ alpha_S_continent <- ggplot() +
   scale_y_discrete(labels = scales::wrap_format(9)) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
@@ -441,12 +386,12 @@ alpha_S_taxa <- ggplot() +
     stroke = 2,
     size = 4
   ) +
-  labs(y = '', x = '') +
+  labs(y = "", x = "") +
   geom_text(
     data = Comparisons |>
       group_by(Taxa) |>
       summarise(Total = n(), Count = sum(Ratio < 0), d = (Count / Total)) |>
-      mutate(percentages = sprintf('%.2f', d)) |>
+      mutate(percentages = sprintf("%.2f", d)) |>
       ungroup() |>
       distinct(Taxa, percentages, .keep_all = T),
     aes(x = -0.85, y = Taxa, label = paste(percentages)),
@@ -464,7 +409,7 @@ alpha_S_taxa <- ggplot() +
   scale_y_discrete(labels = scales::wrap_format(9)) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
@@ -475,9 +420,9 @@ alpha_S_taxa <- ggplot() +
   )
 alpha_S_taxa
 
-cowplot::plot_grid(alpha_S_continent, alpha_S_taxa, labels = c('A', 'B')) +
-  cowplot::draw_label(y = 0.02, label = 'Log Rotio', size = 18)
-ggsave("random_continent_taxa.png", width = 300, height = 200, units = 'mm')
+cowplot::plot_grid(alpha_S_continent, alpha_S_taxa, labels = c("A", "B")) +
+  cowplot::draw_label(y = 0.02, label = "Log Rotio", size = 18)
+ggsave("random_continent_taxa.png", width = 300, height = 200, units = "mm")
 
 alpha_S_land <- ggplot() +
   geom_density_ridges_gradient(
@@ -512,12 +457,12 @@ alpha_S_land <- ggplot() +
     stroke = 2,
     size = 4
   ) +
-  labs(y = '', x = '') +
+  labs(y = "", x = "") +
   geom_text(
     data = Comparisons |>
       group_by(Comparison) |>
       summarise(Total = n(), Count = sum(Ratio < 0), d = (Count / Total)) |>
-      mutate(percentages = sprintf('%.2f', d)) |>
+      mutate(percentages = sprintf("%.2f", d)) |>
       ungroup() |>
       distinct(Comparison, percentages, .keep_all = T),
     aes(x = -0.85, y = Comparison, label = paste(percentages)),
@@ -535,7 +480,7 @@ alpha_S_land <- ggplot() +
   scale_y_discrete(labels = scales::wrap_format(9)) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
@@ -550,21 +495,21 @@ ggsave("alpha_S_land.png")
 ## alpha N#####
 alpha_N_model <- alpha_N_model2
 rm(alpha_N_model2)
-resid <- residuals(alpha_N_model, type = 'pearson', method = 'predict') |>
+resid <- residuals(alpha_N_model, type = "pearson", method = "predict") |>
   dplyr::as_tibble() |>
   bind_cols(alpha_N_model$data)
 
 fitted <- fitted(alpha_N_model, re_formula = NA)
 predict <- predict(alpha_N_model)
 
-resid$fitted <- fitted[, 'Estimate']
-resid$predict <- predict[, 'Estimate']
+resid$fitted <- fitted[, "Estimate"]
+resid$predict <- predict[, "Estimate"]
 
-plot(resid$Estimate ~ resid$fitted, ylab = 'Pearson residual')
+plot(resid$Estimate ~ resid$fitted, ylab = "Pearson residual")
 
 plot(
   resid$Estimate ~ resid$Land_use,
-  ylab = 'Pearson residual',
+  ylab = "Pearson residual",
   xlab = "Land_use"
 )
 
@@ -637,13 +582,13 @@ Comparisons$Comparison <- factor(
   Comparisons$Comparison,
   levels = c("AN", "UN", "FN"),
   labels = c(
-    'Agriculture/Natural vegetation',
-    'Urban/Natural vegetation',
-    'Forestry/Natural vegetation'
+    "Agriculture/Natural vegetation",
+    "Urban/Natural vegetation",
+    "Forestry/Natural vegetation"
   )
 )
 
-Comparisons <- left_join(Comparisons, Metadata, by = 'Dataset_id')
+Comparisons <- left_join(Comparisons, Metadata, by = "Dataset_id")
 
 # mu <- Comparisons |>
 #   group_by(Comparison) |>
@@ -695,8 +640,8 @@ studylevel <- Comparisons |>
     upper_ci = mean + qt(0.975, df = n() - 1) * (sd(Ratio) / sqrt(n()))
   )
 
-studylevel <- left_join(studylevel, Metadata, by = 'Dataset_id')
-#calculate the absolute value of Latitude
+studylevel <- left_join(studylevel, Metadata, by = "Dataset_id")
+# calculate the absolute value of Latitude
 studylevel$Latitude <- abs(as.numeric(studylevel$Latitude))
 studylevel$Dataset_id <- as.character(studylevel$Dataset_id)
 
@@ -736,11 +681,11 @@ alpha_altitude_N <- ggplot() +
     method = "glm"
   ) +
   scale_color_manual(values = gradient_colors) +
-  labs(x = 'Absolute latitude', y = 'α-N') +
+  labs(x = "Absolute latitude", y = "α-N") +
   ylim(-0.5, 0.5) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
     panel.grid.minor.y = element_blank(),
     axis.text.x = element_text(size = 12),
@@ -815,7 +760,7 @@ alpha_altitude_N <- ggplot() +
 #         axis.title.x = element_text(size=14))
 #
 
-#plot comparison#
+# plot comparison#
 alpha_N_continent <- ggplot() +
   geom_density_ridges_gradient(
     data = Comparisons,
@@ -849,12 +794,12 @@ alpha_N_continent <- ggplot() +
     stroke = 2,
     size = 4
   ) +
-  labs(y = '', x = '') +
+  labs(y = "", x = "") +
   geom_text(
     data = Comparisons |>
       group_by(Continent) |>
       summarise(Total = n(), Count = sum(Ratio < 0), d = (Count / Total)) |>
-      mutate(percentages = sprintf('%.2f', d)) |>
+      mutate(percentages = sprintf("%.2f", d)) |>
       ungroup() |>
       distinct(Continent, percentages, .keep_all = T),
     aes(x = -0.85, y = Continent, label = paste(percentages)),
@@ -872,7 +817,7 @@ alpha_N_continent <- ggplot() +
   scale_y_discrete(labels = scales::wrap_format(9)) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
@@ -917,12 +862,12 @@ alpha_N_taxa <- ggplot() +
     stroke = 2,
     size = 4
   ) +
-  labs(y = '', x = '') +
+  labs(y = "", x = "") +
   geom_text(
     data = Comparisons |>
       group_by(Taxa) |>
       summarise(Total = n(), Count = sum(Ratio < 0), d = (Count / Total)) |>
-      mutate(percentages = sprintf('%.2f', d)) |>
+      mutate(percentages = sprintf("%.2f", d)) |>
       ungroup() |>
       distinct(Taxa, percentages, .keep_all = T),
     aes(x = -0.85, y = Taxa, label = paste(percentages)),
@@ -940,7 +885,7 @@ alpha_N_taxa <- ggplot() +
   scale_y_discrete(labels = scales::wrap_format(9)) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
@@ -951,9 +896,9 @@ alpha_N_taxa <- ggplot() +
   )
 alpha_N_taxa
 
-cowplot::plot_grid(alpha_N_continent, alpha_N_taxa, labels = c('A', 'B')) +
-  cowplot::draw_label(y = 0.02, label = 'Log Rotio', size = 18)
-ggsave("random_continent_taxa_N.png", width = 300, height = 200, units = 'mm')
+cowplot::plot_grid(alpha_N_continent, alpha_N_taxa, labels = c("A", "B")) +
+  cowplot::draw_label(y = 0.02, label = "Log Rotio", size = 18)
+ggsave("random_continent_taxa_N.png", width = 300, height = 200, units = "mm")
 
 alpha_N_land <- ggplot() +
   geom_density_ridges_gradient(
@@ -988,12 +933,12 @@ alpha_N_land <- ggplot() +
     stroke = 2,
     size = 4
   ) +
-  labs(y = '', x = '') +
+  labs(y = "", x = "") +
   geom_text(
     data = Comparisons |>
       group_by(Comparison) |>
       summarise(Total = n(), Count = sum(Ratio < 0), d = (Count / Total)) |>
-      mutate(percentages = sprintf('%.2f', d)) |>
+      mutate(percentages = sprintf("%.2f", d)) |>
       ungroup() |>
       distinct(Comparison, percentages, .keep_all = T),
     aes(x = -0.85, y = Comparison, label = paste(percentages)),
@@ -1011,7 +956,7 @@ alpha_N_land <- ggplot() +
   scale_y_discrete(labels = scales::wrap_format(9)) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
@@ -1092,13 +1037,13 @@ Comparisons$Comparison <- factor(
   Comparisons$Comparison,
   levels = c("AN", "UN", "FN"),
   labels = c(
-    'Agriculture/Natural vegetation',
-    'Urban/Natural vegetation',
-    'Forestry/Natural vegetation'
+    "Agriculture/Natural vegetation",
+    "Urban/Natural vegetation",
+    "Forestry/Natural vegetation"
   )
 )
 
-Comparisons <- left_join(Comparisons, Metadata, by = 'Dataset_id')
+Comparisons <- left_join(Comparisons, Metadata, by = "Dataset_id")
 
 
 ### alpha Spie plot comparison at study level####
@@ -1110,8 +1055,8 @@ studylevel <- Comparisons |>
     upper_ci = mean + qt(0.975, df = n() - 1) * (sd(Ratio) / sqrt(n()))
   )
 
-studylevel <- left_join(studylevel, Metadata, by = 'Dataset_id')
-#calculate the absolute value of Latitude
+studylevel <- left_join(studylevel, Metadata, by = "Dataset_id")
+# calculate the absolute value of Latitude
 studylevel$Latitude <- abs(as.numeric(studylevel$Latitude))
 studylevel$Dataset_id <- as.character(studylevel$Dataset_id)
 
@@ -1152,11 +1097,11 @@ alpha_altitude_Spie <- ggplot() +
   ) +
   geom_hline(yintercept = 0, linewidth = 0.5, lty = 2) +
   scale_color_manual(values = gradient_colors) +
-  labs(x = '', y = '', subtitle = "Spie") +
+  labs(x = "", y = "", subtitle = "Spie") +
   ylim(-1.0, 0.5) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
     panel.grid.minor.y = element_blank(),
     plot.subtitle = element_text(hjust = 0.5, size = 14),
@@ -1232,11 +1177,11 @@ alpha_taxa_Spie <- ggplot() +
   ) +
   geom_vline(xintercept = 0, size = 0.5, lty = 2) +
   scale_color_manual(values = gradient_colors) +
-  labs(y = '', x = '', subtitle = "Spie") +
+  labs(y = "", x = "", subtitle = "Spie") +
   xlim(-0.75, 0.5) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
     panel.grid.minor.y = element_blank(),
     plot.subtitle = element_text(hjust = 0.5, size = 14),
@@ -1313,13 +1258,13 @@ Comparisons$Comparison <- factor(
   Comparisons$Comparison,
   levels = c("AN", "UN", "FN"),
   labels = c(
-    'Agriculture/Natural vegetation',
-    'Urban/Natural vegetation',
-    'Forestry/Natural vegetation'
+    "Agriculture/Natural vegetation",
+    "Urban/Natural vegetation",
+    "Forestry/Natural vegetation"
   )
 )
 
-Comparisons <- left_join(Comparisons, Metadata, by = 'Dataset_id')
+Comparisons <- left_join(Comparisons, Metadata, by = "Dataset_id")
 
 ### gamma S plot comparison at study level####
 studylevel <- Comparisons |>
@@ -1330,8 +1275,8 @@ studylevel <- Comparisons |>
     upper_ci = mean + qt(0.975, df = n() - 1) * (sd(Ratio) / sqrt(n()))
   )
 
-studylevel <- left_join(studylevel, Metadata, by = 'Dataset_id')
-#calculate the absolute value of Latitude
+studylevel <- left_join(studylevel, Metadata, by = "Dataset_id")
+# calculate the absolute value of Latitude
 studylevel$Latitude <- abs(as.numeric(studylevel$Latitude))
 studylevel$Dataset_id <- as.character(studylevel$Dataset_id)
 
@@ -1372,11 +1317,11 @@ gamma_altitude_S <- ggplot() +
   ) +
   geom_hline(yintercept = 0, linewidth = 0.5, lty = 2) +
   scale_color_manual(values = gradient_colors) +
-  labs(x = '', y = 'γ') +
+  labs(x = "", y = "γ") +
   ylim(-1.0, 0.5) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
     panel.grid.minor.y = element_blank(),
     axis.title.x = element_blank(),
@@ -1449,11 +1394,11 @@ gamma_taxa_S <- ggplot() +
   ) +
   geom_vline(xintercept = 0, size = 0.5, lty = 2) +
   scale_color_manual(values = gradient_colors) +
-  labs(y = 'γ', x = '') +
+  labs(y = "γ", x = "") +
   xlim(-0.75, 0.5) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
     panel.grid.minor.y = element_blank(),
     axis.text.x = element_text(size = 12),
@@ -1529,13 +1474,13 @@ Comparisons$Comparison <- factor(
   Comparisons$Comparison,
   levels = c("AN", "UN", "FN"),
   labels = c(
-    'Agriculture/Natural vegetation',
-    'Urban/Natural vegetation',
-    'Forestry/Natural vegetation'
+    "Agriculture/Natural vegetation",
+    "Urban/Natural vegetation",
+    "Forestry/Natural vegetation"
   )
 )
 
-Comparisons <- left_join(Comparisons, Metadata, by = 'Dataset_id')
+Comparisons <- left_join(Comparisons, Metadata, by = "Dataset_id")
 
 ### gamma Spie plot comparison at study level####
 studylevel <- Comparisons |>
@@ -1546,8 +1491,8 @@ studylevel <- Comparisons |>
     upper_ci = mean + qt(0.975, df = n() - 1) * (sd(Ratio) / sqrt(n()))
   )
 
-studylevel <- left_join(studylevel, Metadata, by = 'Dataset_id')
-#calculate the absolute value of Latitude
+studylevel <- left_join(studylevel, Metadata, by = "Dataset_id")
+# calculate the absolute value of Latitude
 studylevel$Latitude <- abs(as.numeric(studylevel$Latitude))
 studylevel$Dataset_id <- as.character(studylevel$Dataset_id)
 
@@ -1588,11 +1533,11 @@ gamma_altitude_Spie <- ggplot() +
   ) +
   geom_hline(yintercept = 0, linewidth = 0.5, lty = 2) +
   scale_color_manual(values = gradient_colors) +
-  labs(x = '', y = '') +
+  labs(x = "", y = "") +
   ylim(-1.0, 0.5) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
     panel.grid.minor.y = element_blank(),
     axis.title.x = element_blank(),
@@ -1665,11 +1610,11 @@ gamma_taxa_Spie <- ggplot() +
   ) +
   geom_vline(xintercept = 0, size = 0.5, lty = 2) +
   scale_color_manual(values = gradient_colors) +
-  labs(y = '', x = '') +
+  labs(y = "", x = "") +
   xlim(-0.75, 0.5) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
     panel.grid.minor.y = element_blank(),
     axis.text.x = element_text(size = 12),
@@ -1681,21 +1626,21 @@ gamma_taxa_Spie <- ggplot() +
 ## gamma N ####
 gamma_N_model <- gamma_N_model2
 rm(gamma_N_model2)
-resid <- residuals(gamma_N_model, type = 'pearson', method = 'predict') |>
+resid <- residuals(gamma_N_model, type = "pearson", method = "predict") |>
   dplyr::as_tibble() |>
   bind_cols(gamma_N_model$data)
 
 fitted <- fitted(gamma_N_model, re_formula = NA)
 predict <- predict(gamma_N_model)
 
-resid$fitted <- fitted[, 'Estimate']
-resid$predict <- predict[, 'Estimate']
+resid$fitted <- fitted[, "Estimate"]
+resid$predict <- predict[, "Estimate"]
 
-plot(resid$Estimate ~ resid$fitted, ylab = 'Pearson residual')
+plot(resid$Estimate ~ resid$fitted, ylab = "Pearson residual")
 
 plot(
   resid$Estimate ~ resid$Land_use,
-  ylab = 'Pearson residual',
+  ylab = "Pearson residual",
   xlab = "Land_use"
 )
 
@@ -1763,13 +1708,13 @@ Comparisons$Comparison <- factor(
   Comparisons$Comparison,
   levels = c("AN", "UN", "FN"),
   labels = c(
-    'Agriculture/Natural vegetation',
-    'Urban/Natural vegetation',
-    'Forestry/Natural vegetation'
+    "Agriculture/Natural vegetation",
+    "Urban/Natural vegetation",
+    "Forestry/Natural vegetation"
   )
 )
 
-Comparisons <- left_join(Comparisons, Metadata, by = 'Dataset_id')
+Comparisons <- left_join(Comparisons, Metadata, by = "Dataset_id")
 
 ### gamma N plot comparison at study level####
 studylevel <- Comparisons |>
@@ -1780,8 +1725,8 @@ studylevel <- Comparisons |>
     upper_ci = mean + qt(0.975, df = n() - 1) * (sd(Ratio) / sqrt(n()))
   )
 
-studylevel <- left_join(studylevel, Metadata, by = 'Dataset_id')
-#calculate the absolute value of Latitude
+studylevel <- left_join(studylevel, Metadata, by = "Dataset_id")
+# calculate the absolute value of Latitude
 studylevel$Latitude <- abs(as.numeric(studylevel$Latitude))
 studylevel$Dataset_id <- as.character(studylevel$Dataset_id)
 
@@ -1822,11 +1767,11 @@ gamma_altitude_N <- ggplot() +
   ) +
   geom_hline(yintercept = 0, linewidth = 0.5, lty = 2) +
   scale_color_manual(values = gradient_colors) +
-  labs(x = 'Absolute latitude', y = 'γ-N') +
+  labs(x = "Absolute latitude", y = "γ-N") +
   ylim(-1.0, 0.5) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
     panel.grid.minor.y = element_blank(),
     axis.text.x = element_text(size = 12),
@@ -1898,11 +1843,11 @@ gamma_taxa_N <- ggplot() +
   ) +
   geom_vline(xintercept = 0, size = 0.5, lty = 2) +
   scale_color_manual(values = gradient_colors) +
-  labs(y = '', x = 'γ-N') +
+  labs(y = "", x = "γ-N") +
   xlim(-0.75, 0.5) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
     panel.grid.minor.y = element_blank(),
     axis.text.x = element_text(size = 12),
@@ -1978,10 +1923,10 @@ Comparisons <- Natural_vegetation |>
 Comparisons$Comparison <- factor(
   Comparisons$Comparison,
   levels = c("AN", "UN", "FN"),
-  labels = c('Agriculture', 'Urban', 'Forestry')
+  labels = c("Agriculture", "Urban", "Forestry")
 )
 
-Comparisons <- left_join(Comparisons, Metadata, by = 'Dataset_id')
+Comparisons <- left_join(Comparisons, Metadata, by = "Dataset_id")
 
 ### beta S plot comparison at study level####
 studylevel <- Comparisons |>
@@ -1992,8 +1937,8 @@ studylevel <- Comparisons |>
     upper_ci = mean + qt(0.975, df = n() - 1) * (sd(Ratio) / sqrt(n()))
   )
 
-studylevel <- left_join(studylevel, Metadata, by = 'Dataset_id')
-#calculate the absolute value of Latitude
+studylevel <- left_join(studylevel, Metadata, by = "Dataset_id")
+# calculate the absolute value of Latitude
 studylevel$Latitude <- abs(as.numeric(studylevel$Latitude))
 studylevel$Dataset_id <- as.character(studylevel$Dataset_id)
 
@@ -2034,11 +1979,11 @@ beta_altitude_S <- ggplot() +
   ) +
   geom_hline(yintercept = 0, linewidth = 0.5, lty = 2) +
   scale_color_manual(values = gradient_colors) +
-  labs(x = '', y = 'β') +
+  labs(x = "", y = "β") +
   ylim(-1.0, 0.5) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
     panel.grid.minor.y = element_blank(),
     axis.title.x = element_blank(),
@@ -2111,11 +2056,11 @@ beta_taxa_S <- ggplot() +
   ) +
   geom_vline(xintercept = 0, size = 0.5, lty = 2) +
   scale_color_manual(values = gradient_colors) +
-  labs(y = 'β', x = '') +
+  labs(y = "β", x = "") +
   xlim(-0.75, 0.5) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
     panel.grid.minor.y = element_blank(),
     axis.text.x = element_text(size = 12),
@@ -2191,13 +2136,13 @@ Comparisons$Comparison <- factor(
   Comparisons$Comparison,
   levels = c("AN", "UN", "FN"),
   labels = c(
-    'Agriculture/Natural vegetation',
-    'Urban/Natural vegetation',
-    'Forestry/Natural vegetation'
+    "Agriculture/Natural vegetation",
+    "Urban/Natural vegetation",
+    "Forestry/Natural vegetation"
   )
 )
 
-Comparisons <- left_join(Comparisons, Metadata, by = 'Dataset_id')
+Comparisons <- left_join(Comparisons, Metadata, by = "Dataset_id")
 
 ### beta Spie plot comparison at study level####
 studylevel <- Comparisons |>
@@ -2208,8 +2153,8 @@ studylevel <- Comparisons |>
     upper_ci = mean + qt(0.975, df = n() - 1) * (sd(Ratio) / sqrt(n()))
   )
 
-studylevel <- left_join(studylevel, Metadata, by = 'Dataset_id')
-#calculate the absolute value of Latitude
+studylevel <- left_join(studylevel, Metadata, by = "Dataset_id")
+# calculate the absolute value of Latitude
 studylevel$Latitude <- abs(as.numeric(studylevel$Latitude))
 studylevel$Dataset_id <- as.character(studylevel$Dataset_id)
 
@@ -2250,11 +2195,11 @@ beta_altitude_Spie <- ggplot() +
   ) +
   geom_hline(yintercept = 0, linewidth = 0.5, lty = 2) +
   scale_color_manual(values = gradient_colors) +
-  labs(x = '', y = '') +
+  labs(x = "", y = "") +
   ylim(-1.0, 0.5) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
     panel.grid.minor.y = element_blank(),
     axis.title.x = element_blank(),
@@ -2327,11 +2272,11 @@ beta_taxa_Spie <- ggplot() +
   ) +
   geom_vline(xintercept = 0, size = 0.5, lty = 2) +
   scale_color_manual(values = gradient_colors) +
-  labs(y = '', x = '') +
+  labs(y = "", x = "") +
   xlim(-0.75, 0.5) +
   theme_minimal() +
   theme(
-    legend.position = 'none',
+    legend.position = "none",
     panel.border = element_rect(color = "gray", fill = NA, size = 0.5),
     panel.grid.minor.y = element_blank(),
     axis.text.x = element_text(size = 12),
@@ -2351,12 +2296,12 @@ Fig2 <- cowplot::plot_grid(
   ncol = 2,
   align = "v",
   rel_heights = c(1, 1, 1),
-  labels = c('A', 'B', 'C', 'D', 'E', 'F'),
+  labels = c("A", "B", "C", "D", "E", "F"),
   label_size = 10,
   label_fontface = "plain"
 ) +
   cowplot::draw_label(
-    label = 'Absolute latitude',
+    label = "Absolute latitude",
     y = 0.001,
     hjust = 0.3,
     vjust = 1,
@@ -2402,12 +2347,12 @@ Fig3 <- cowplot::plot_grid(
   ncol = 2,
   align = "v",
   rel_heights = c(1, 1, 1),
-  labels = c('A', 'B', 'C', 'D', 'E', 'F'),
+  labels = c("A", "B", "C", "D", "E", "F"),
   label_size = 10,
   label_fontface = "plain"
 ) +
   cowplot::draw_label(
-    label = 'Effect size',
+    label = "Effect size",
     y = 0.001,
     hjust = 0.3,
     vjust = 1,

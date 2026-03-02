@@ -2,8 +2,8 @@ library(tidyverse)
 library(tidybayes)
 
 # column for stream order #ORD_STRA
-#for alpha S: S_alpha_alt_3
-#for alpha Spie: Spie_alpha_alt_2
+# for alpha S: S_alpha_alt_3
+# for alpha Spie: Spie_alpha_alt_2
 
 mob_data_alpha_so <- read.table(
   file = "results/temp/mob_data_alpha_so.txt",
@@ -17,7 +17,7 @@ Spie_alpha_alt_2 <- readRDS("results/models/Spie_alpha_alt_2.Rds")
 S_alpha_alt_3 <- readRDS("results/models/S_alpha_alt_3.Rds")
 
 # alpha S #####
-#draw study level estimates
+# draw study level estimates
 Forest <- S_alpha_alt_3 |>
   spread_draws(
     b_Land_useForest,
@@ -81,14 +81,14 @@ ComparisonsA0 <- Forest |>
       Comparison,
       levels = c("AN", "UN", "FN"),
       labels = c(
-        'Agriculture/Forest',
-        'Urban/Forest',
-        'Forestry/Forest'
+        "Agriculture/Forest",
+        "Urban/Forest",
+        "Forestry/Forest"
       )
     )
   )
 
-#stream order
+# stream order
 alpha_stream_order_S <- ggplot() +
   ggridges::geom_density_ridges_gradient(
     data = ComparisonsA0,
@@ -116,9 +116,9 @@ alpha_stream_order_S <- ggplot() +
     fun.x = median,
     size = 1.25,
     shape = 18,
-    colour = 'black'
+    colour = "black"
   ) +
-  labs(y = 'S', x = 'Log Ratio') +
+  labs(y = "S", x = "Log Ratio") +
   geom_text(
     data = ComparisonsA0 |>
       filter(Ratio < 0) |>
@@ -214,7 +214,7 @@ ComparisonsA2 <- Forest |>
     Comparison = factor(
       Comparison,
       levels = c("AN", "UN", "FN"),
-      labels = c('Agriculture/Forest', 'Urban/Forest', 'Forestry/Forest')
+      labels = c("Agriculture/Forest", "Urban/Forest", "Forestry/Forest")
     )
   )
 
@@ -247,7 +247,7 @@ n_total_count <- left_join(
   by = join_by(ORD_STRA, ratio_type)
 )
 
-#plot
+# plot
 alpha_stream_order <- ggplot() +
   ggridges::geom_density_ridges_gradient(
     data = Comparisons02,
@@ -274,7 +274,7 @@ alpha_stream_order <- ggplot() +
   geom_text(
     data = n_total_count |>
       mutate(d = n_count / n_total) |>
-      mutate(percentages = sprintf('%.2f', d)) |>
+      mutate(percentages = sprintf("%.2f", d)) |>
       distinct(ORD_STRA, ratio_type, percentages, .keep_all = T),
     aes(
       x = -0.85,
@@ -287,22 +287,22 @@ alpha_stream_order <- ggplot() +
     show.legend = FALSE
   ) +
   geom_vline(xintercept = 0, linewidth = 0.5, linetype = 2) +
-  labs(y = 'Basin size', x = 'Effect size') +
+  labs(y = "Basin size", x = "Effect size") +
   scale_fill_manual(
     values = c(
-      "RatioA0" = scales::alpha("#F2790F", 0.7),
+      "RatioA0" = scales::alpha("#B93102", 0.7),
       "RatioA2" = scales::alpha("#CAAE10", 0.7)
     ),
     name = " ",
-    labels = c("RatioA0" = "S", "RatioA2" = "Spie")
+    labels = c("RatioA0" = "S", "RatioA2" = expression(S[PIE]))
   ) +
   scale_color_manual(
     values = c(
-      "RatioA0" = scales::alpha("#F2790F", 0.9),
+      "RatioA0" = scales::alpha("#B93102", 0.9),
       "RatioA2" = scales::alpha("#CAAE10", 0.9)
     ),
     name = " ",
-    labels = c("RatioA0" = "S", "RatioA2" = "Spie")
+    labels = c("RatioA0" = "S", "RatioA2" = expression(S[PIE]))
   ) +
   scale_y_discrete(labels = scales::wrap_format(9)) +
   theme_minimal() +

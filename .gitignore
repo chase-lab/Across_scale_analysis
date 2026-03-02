@@ -7,9 +7,11 @@
 /data
 /figures/reference*
 /figures/
+/figures_revision/
 /script/4.fixed_effects_plot.R
 /script/5. study_level_plots_original.R
 /script/5.study_level_plots.R
+/script/5.1.study_level_plots.R
 /script/6.1.Stream_order_test_orginal.R
 /script/6.2.posterior_calculate_alpha_with_gamma_beta_original.R
 
